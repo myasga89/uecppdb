@@ -362,7 +362,7 @@
 <script>
 /* Populate select filters with uq values from each column */
 function populateSelects() {
-  const table = document.getElementById('runewordTable');
+  const table = document.getElementById('cpp');
   const selects = Array.from(table.tHead.querySelectorAll('select.filter'));
   const columns = selects.map(s => parseInt(s.dataset.col,10));
   // build set per column
@@ -401,7 +401,7 @@ function populateSelects() {
 /* Combined filter: for each column both select and input are considered (AND).
    If select has value -> require it, if input has value -> require includes match. */
 function filterAllColumns(){
-  const table = document.getElementById('runewordTable');
+  const table = document.getElementById('cpp');
   const headerCells = Array.from(table.tHead.rows[0].cells);
   const filters = headerCells.map(cell=>{
     const sel = cell.querySelector('select.filter');
@@ -451,4 +451,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
+
 
