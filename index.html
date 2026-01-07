@@ -172,3 +172,98 @@
         <div class="param">-</div>
       </td>
     </tr>
+    
+</tbody>
+</table>
+<script>
+/* Populate select filters with uq values from each column */
+function populateSelects() {
+  const table = document.getElementById('runewordTable');
+  const selects = Array.from(table.tHead.querySelectorAll('select.filter'));
+  const columns = selects.map(s => parseInt(s.dataset.col,10));
+  // build set per column
+  const sets = columns.map(()=>new Set());
+  for (let row of table.tBodies[0].rows) {
+    columns.forEach((colIdx,i) => {
+      const cell = row.cells[colIdx];
+      if(!cell) return;
+      // if many div.param -> add each as distinct option
+      const parts = Array.from(cell.querySelectorAll('div.param')).map(d=>d.textContent.trim());
+      if(parts.length){
+        parts.forEach(p => sets[i].add(p));
+      } else {
+        const txt = cell.textContent.trim();
+        if(txt) sets[i].add(txt);
+      }
+    });
+  }
+  // write options
+  selects.forEach((sel,i)=>{
+    const colSet = Array.from(sets[i]).sort((a,b)=>a.localeCompare(b, undefined, {sensitivity:'base'}));
+    // clear and add default
+    sel.innerHTML = '';
+    const optAll = document.createElement('option');
+    optAll.value = ''; optAll.textContent = 'All';
+    sel.appendChild(optAll);
+    colSet.forEach(val=>{
+      const o = document.createElement('option');
+      o.value = val;
+      o.textContent = val;
+      sel.appendChild(o);
+    });
+  });
+}
+
+/* Combined filter: for each column both select and input are considered (AND).
+   If select has value -> require it, if input has value -> require includes match. */
+function filterAllColumns(){
+  const table = document.getElementById('runewordTable');
+  const headerCells = Array.from(table.tHead.rows[0].cells);
+  const filters = headerCells.map(cell=>{
+    const sel = cell.querySelector('select.filter');
+    const inp = cell.querySelector('input.filter');
+    return {
+      select: sel ? sel.value.toString().toLowerCase().trim() : '',
+      input: inp ? inp.value.toString().toLowerCase().trim() : ''
+    };
+  });
+
+  for(let row of table.tBodies[0].rows){
+    let show = true;
+    headerCells.forEach((cell, idx) => {
+      if(!show) return;
+      const filter = filters[idx];
+      if(!filter) return;
+      // assemble cell text from .param blocks or fallback to textContent
+      const cellEl = row.cells[idx];
+      let text = '';
+      if(cellEl){
+        const parts = Array.from(cellEl.querySelectorAll('div.param')).map(d=>d.textContent.trim());
+        text = parts.length ? parts.join(' ').toLowerCase() : cellEl.textContent.trim().toLowerCase();
+      }
+      // if select specified but not found -> hide
+      if(filter.select){
+        if(!text.includes(filter.select)) show = false;
+      }
+      // if input specified but not found -> hide
+      if(filter.input){
+        if(!text.includes(filter.input)) show = false;
+      }
+    });
+    row.style.display = show ? '' : 'none';
+  }
+}
+
+/* Initialize on load */
+document.addEventListener('DOMContentLoaded', () => {
+  populateSelects();
+  // ensure selects/inputs trigger filterAllColumns also if user changes them manually later
+  document.querySelectorAll('select.filter, input.filter').forEach(el=>{
+    el.addEventListener('change', filterAllColumns);
+    el.addEventListener('input', filterAllColumns);
+  });
+});
+</script>
+
+</body>
+</html>
